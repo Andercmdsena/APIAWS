@@ -1,0 +1,79 @@
+# Pipeline CI/CD: Source -> Build -> Deploy a AWS Elastic Beanstalk
+# Se ejecuta en cada push a la rama main (o manualmente desde la pestaña Actions).
+name: CI/CD - Elastic Beanstalk
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  PROJECT_PATH: "Despliegue de contenedores en AWS/Despliegue de contenedores en AWS.csproj"
+  AWS_REGION: us-east-1
+  EB_APP: api-estudiantes
+  EB_ENV: Api-estudiantes-env
+  EB_BUCKET: elasticbeanstalk-us-east-1-528775969837
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ---------- Etapa SOURCE ----------
+      - name: Source - descargar el código del repositorio
+        uses: actions/checkout@v4
+
+      # ---------- Etapa BUILD ----------
+      - name: Build - instalar .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Build - restaurar paquetes
+        run: dotnet restore "$PROJECT_PATH"
+
+      - name: Build - compilar en Release
+        run: dotnet build "$PROJECT_PATH" -c Release --no-restore
+
+      - name: Build - publicar la aplicación
+        run: dotnet publish "$PROJECT_PATH" -c Release --no-build -o publish
+
+      - name: Build - empaquetar en zip para Beanstalk
+        run: |
+          cd publish
+          zip -r ../app.zip .
+          cd ..
+          ls -lh app.zip
+
+      # ---------- Etapa DEPLOY ----------
+      - name: Deploy - configurar credenciales de AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy - subir el paquete a S3
+        run: |
+          VERSION="v${{ github.run_number }}-${GITHUB_SHA::7}"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          aws s3 cp app.zip "s3://$EB_BUCKET/$EB_APP/$VERSION.zip"
+
+      - name: Deploy - crear la versión de la aplicación en Beanstalk
+        run: |
+          aws elasticbeanstalk create-application-version \
+            --application-name "$EB_APP" \
+            --version-label "$VERSION" \
+            --description "Commit ${GITHUB_SHA::7}" \
+            --source-bundle S3Bucket="$EB_BUCKET",S3Key="$EB_APP/$VERSION.zip"
+
+      - name: Deploy - actualizar el entorno con la nueva versión
+        run: |
+          aws elasticbeanstalk update-environment \
+            --environment-name "$EB_ENV" \
+            --version-label "$VERSION"
+          echo "Esperando a que el entorno termine de actualizarse..."
+          aws elasticbeanstalk wait environment-updated --environment-names "$EB_ENV"
+          aws elasticbeanstalk describe-environments --environment-names "$EB_ENV" \
+            --query "Environments[0].{Estado:Status,Salud:Health,Version:VersionLabel,URL:CNAME}" --output table
