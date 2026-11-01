@@ -5,12 +5,19 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Despliegue_de_contenedores_en_AWS</RootNamespace>
+    <!-- Nombre del .dll sin espacios para que Elastic Beanstalk lo ejecute sin problemas -->
+    <AssemblyName>ApiEstudiantes</AssemblyName>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
+  </ItemGroup>
+
+  <!-- El Procfile le dice a Elastic Beanstalk cómo arrancar la app -->
+  <ItemGroup>
+    <None Update="Procfile" CopyToPublishDirectory="Always" />
   </ItemGroup>
 
 </Project>

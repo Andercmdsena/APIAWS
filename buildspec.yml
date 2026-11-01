@@ -1,0 +1,30 @@
+version: 0.2
+
+# CodeBuild lee este archivo desde la raíz del repositorio.
+phases:
+  install:
+    runtime-versions:
+      dotnet: 10.0
+  pre_build:
+    commands:
+      - echo "Restaurando paquetes NuGet..."
+      - dotnet restore "Despliegue de contenedores en AWS/Despliegue de contenedores en AWS.csproj"
+  build:
+    commands:
+      - echo "Compilando en modo Release..."
+      - dotnet build "Despliegue de contenedores en AWS/Despliegue de contenedores en AWS.csproj" -c Release --no-restore
+  post_build:
+    commands:
+      - echo "Publicando la aplicación..."
+      - dotnet publish "Despliegue de contenedores en AWS/Despliegue de contenedores en AWS.csproj" -c Release --no-build -o ./publish
+
+# Lo que sale de aquí es el paquete que Elastic Beanstalk despliega
+artifacts:
+  base-directory: publish
+  files:
+    - '**/*'
+
+# Guarda los paquetes NuGet entre builds para que compile más rápido
+cache:
+  paths:
+    - '/root/.nuget/packages/**/*'

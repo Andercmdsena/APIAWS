@@ -35,10 +35,24 @@ app.UseSwaggerUI(options =>
     options.RoutePrefix = string.Empty; // Swagger UI en la raíz "/"
 });
 
-app.UseHttpsRedirection();
+// En Elastic Beanstalk, nginx recibe el tráfico por HTTP (puerto 80) y lo pasa a la app
+// por el puerto 5000, así que la redirección a HTTPS solo se usa en desarrollo.
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Endpoint de salud: sirve para comprobar rápido qué versión está desplegada.
+// Para probar el pipeline, cambia la versión, haz commit y push.
+app.MapGet("/health", () => Results.Ok(new
+{
+    status = "OK",
+    version = "1.0",
+    fechaUtc = DateTime.UtcNow
+}));
 
 app.Run();
