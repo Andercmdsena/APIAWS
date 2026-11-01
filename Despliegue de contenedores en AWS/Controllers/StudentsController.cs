@@ -14,7 +14,7 @@ namespace Despliegue_de_contenedores_en_AWS.Controllers
         private static readonly List<Student> Students =
         [
             new Student { Id = 1, Nombre = "Anderson", Apellido = "Sena", Correo = "anderson@example.com" },
-            new Student { Id = 2, Nombre = "David", Apellido = "Gomez", Correo = "david@example.com" },
+            new Student { Id = 2, Nombre = "David", Apellido = "Gomez", Correo = "david@exampledsadas.comsssss" },
             new Student { Id = 3, Nombre = "Juan", Apellido = "Perez", Correo = "juan@example.com" },
             new Student { Id = 4, Nombre = "Roberto", Apellido = "Diaz", Correo = "roberto@example.com" },
             new Student { Id = 5, Nombre = "Maria", Apellido = "Lopez", Correo = "maria@example.com" },
