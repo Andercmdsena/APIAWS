@@ -1,0 +1,6 @@
+@Despliegue_de_contenedores_en_AWS_HostAddress = http://localhost:5248
+
+GET {{Despliegue_de_contenedores_en_AWS_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
