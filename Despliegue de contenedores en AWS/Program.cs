@@ -51,7 +51,7 @@ app.MapControllers();
 app.MapGet("/health", () => Results.Ok(new
 {
     status = "OK",
-    version = "1.0",
+    version = "2.0",
     fechaUtc = DateTime.UtcNow
 }));
 
